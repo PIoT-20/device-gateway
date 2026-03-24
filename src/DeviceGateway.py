@@ -16,7 +16,7 @@ class DeviceGateway:
         if self.config.get("device_info", {}).get("device_id") is None:
             try:
                 res = self.register()
-                self.config["device_info"]["device_id"] = res["device_id"]
+                self.config["device_info"]["device_id"] = res["_id"]
             except Exception as e:
                 print("Error while registering: ", e)
 

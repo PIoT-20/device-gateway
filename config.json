@@ -1,9 +1,15 @@
 {
     "device_info": {
-        "device_id": "399405",
-        "client_id": "10348506945867289108",
-        "location": "Room 101",
         "device_type": "noise",
-        "description": "Noise Monitoring Device in Room 101"
+        "address": "Room 101",
+        "description": "Noise Monitoring Device in Room 101",
+        "sensors": [
+            {
+                "name": "noise_level",
+                "model": "Sound Level Meter XYZ",
+                "unit": "dB"
+            }
+        ],
+        "user_id": "10348506945867289108"
     }
 }
