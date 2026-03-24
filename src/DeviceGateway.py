@@ -6,13 +6,18 @@ from MyMQTT import MyMQTT
 class DeviceGateway:
     exposed = True
 
-    def __init__(self, config_filename) -> None:
-        self.catalog = os.getenv("CATALOG_ADDRESS")
+    def __init__(self, catalog_address, cfg_path) -> None:
+        self.catalog = catalog_address
         if not self.catalog:
-            raise ValueError("CATALOG_ADDRESS environment variable not set")
-        
+            raise ValueError("Catalog address must be specified")
+
         # Get device data and register the device if it doesn't have an id yet
-        self.config = json.load(open(config_filename))
+        cfg_file = open(cfg_path, "r+")
+        if not cfg_file:
+            raise ValueError("Config file not found")
+        self.config = json.load(cfg_file)
+        cfg_file.close()
+
         if self.config.get("device_info", {}).get("device_id") is None:
             try:
                 res = self.register()
@@ -20,8 +25,8 @@ class DeviceGateway:
             except Exception as e:
                 print("Error while registering: ", e)
 
-        json.dump(self.config, open(config_filename, "w"))
-
+        json.dump(self.config, open(cfg_path, "w"))
+        cfg_file.close()
 
         self.broker_host = os.getenv("BROKER_HOST")
         if not self.broker_host:
@@ -36,6 +41,8 @@ class DeviceGateway:
     
     def register(self):
         data = self.config.get("device_info", {})
+        if not data:
+            raise ValueError("Device info is missing in config")
 
         ret = req.post(f"http://{self.catalog}/device", json=data)
         if ret.status_code == 200:

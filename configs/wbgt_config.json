@@ -1,0 +1,20 @@
+{
+    "device_info": {
+        "device_type": "WBGT",
+        "address": "Room 101",
+        "description": "WBGT Monitoring Device in Room 101",
+        "sensors": [
+            {
+                "name": "Natural Wet Bulb Termometer",
+                "model": "WetBulbSensor ABC",
+                "unit": "°C"
+            },
+            {
+                "name": "Black Globe Termometer",
+                "model": "BlackGlobeSensor ABC",
+                "unit": "°C"
+            }
+        ],
+        "user_id": "10348506945867289108"
+    }
+}

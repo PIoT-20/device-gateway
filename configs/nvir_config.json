@@ -1,0 +1,25 @@
+{
+    "device_info": {
+        "device_type": "NVIR-ventilation",
+        "address": "Room 101",
+        "description": "NVIR Ventilation Device in Room 101",
+        "sensors": [
+            {
+                "name": "Temperature Sensor",
+                "model": "TemperatureSensor ABC",
+                "unit": "°C"
+            },
+            {
+                "name": "Pressure Sensor",
+                "model": "PressureSensor ABC",
+                "unit": "hPa"
+            },
+            {
+                "name": "CO2 Sensor",
+                "model": "CO2Sensor ABC",
+                "unit": "ppm"
+            }
+        ],
+        "user_id": "10348506945867289108"
+    }
+}

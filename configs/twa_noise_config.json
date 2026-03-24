@@ -1,6 +1,6 @@
 {
     "device_info": {
-        "device_type": "noise",
+        "device_type": "TWA-noise",
         "address": "Room 101",
         "description": "Noise Monitoring Device in Room 101",
         "sensors": [
