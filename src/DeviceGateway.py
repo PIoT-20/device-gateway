@@ -1,64 +1,47 @@
+import asyncio
 import requests as req
-import os
 import json
 from MyMQTT import MyMQTT
+from bleak import BleakScanner
+import threading
+from Device import Device, ConnectionStatus
+from Factories import ConnectionFactory
+from CloudServices import CloudServices
 
 class DeviceGateway:
     exposed = True
 
-    def __init__(self, catalog_address, cfg_path) -> None:
-        self.catalog = catalog_address
-        if not self.catalog:
-            raise ValueError("Catalog address must be specified")
-
-        # Get device data and register the device if it doesn't have an id yet
-        cfg_file = open(cfg_path, "r+")
-        if not cfg_file:
-            raise ValueError("Config file not found")
-        self.config = json.load(cfg_file)
-        cfg_file.close()
-
-        if self.config.get("device_info", {}).get("device_id") is None:
-            try:
-                res = self.register()
-                self.config["device_info"]["device_id"] = res["_id"]
-            except Exception as e:
-                print("Error while registering: ", e)
-
-        json.dump(self.config, open(cfg_path, "w"))
-        cfg_file.close()
-
-        self.broker_host = os.getenv("BROKER_HOST")
-        if not self.broker_host:
-            raise ValueError("BROKER_HOST environment variable not set")
-        
-        self.broker_port = os.getenv("BROKER_PORT")
-        if not self.broker_port:
-            raise ValueError("BROKER_PORT environment variable not set")
-        self.broker_port = int(self.broker_port)
-
-        self.mqtt_client = MyMQTT("DeviceGatewayLocal", self.broker_host, self.broker_port, self)
+    def __init__(self, cloud_service: CloudServices, devices: list[Device]) -> None:
+        self.cloud_service = cloud_service
+        self.devices = devices
+            
     
-    def register(self):
-        data = self.config.get("device_info", {})
-        if not data:
-            raise ValueError("Device info is missing in config")
-
-        ret = req.post(f"http://{self.catalog}/device", json=data)
-        if ret.status_code == 200:
-            return ret.json()
-        else:
-            raise Exception(f"Failed to register device: {ret.text}")
+    def handle_reading(self, device_id, reading):
+        self.cloud_service.send_reading(device_id, reading)
 
     def Start(self):
-        self.mqtt_client.start()
+        for device in self.devices:
+            if not device.get_id():
+                try:
+                    self.cloud_service.register_device(device)
+                except Exception as e:
+                    print(f"Error registering device {device.get_id()}: {e}")
+                    self.devices.remove(device)
 
-    def send_reading(self, reading):
-        device_id = self.config["device_info"]["device_id"]
-        topic = f"devices/{device_id}/readings"
-        self.mqtt_client.myPublish(topic, reading)
+        for device in self.devices:
+            try:
+                connection = ConnectionFactory.create_connection(
+                    device.get_id(),
+                    device.get_connection_info(),
+                    device.get_device_type(),
+                    self.handle_reading,
+                )
+                device.connect(connection)
+            except ValueError as e:
+                print(f"Error creating connection for device {device.get_id()}: {e}")
 
     def Stop(self):
-        self.mqtt_client.stop()
-
-    
+        for device in self.devices:
+            if device.get_connection_status() == ConnectionStatus.CONNECTION_ON:
+                device.disconnect()
+        self.cloud_service.Stop()

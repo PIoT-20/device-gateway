@@ -10,6 +10,10 @@
                 "unit": "dB"
             }
         ],
+        "connection": {
+            "protocol": "EMULATOR",
+            "frequency_seconds": 30
+        },
         "user_id": "10348506945867289108"
     }
 }
