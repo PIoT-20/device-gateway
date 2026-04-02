@@ -22,7 +22,17 @@ class CloudServices:
         data = device.get_config()
         ret = req.post(f"{self.catalog}/device", json=data)
         if ret.status_code == 201:
-            device.set_config(ret.json())
+            ret_data = ret.json()
+            print(ret_data)
+            ret_data["device_id"] = ret_data.pop("_id")["$oid"] # Rename _id to device_id
+            
+            if "device_id" not in ret_data:
+                raise Exception("Invalid response from catalog: missing device_id")
+            device.set_config(ret_data)
+            
+            if device.get_id() is None:
+                raise Exception("Device ID not set after registration")
+            
             print(f"Device {device.get_id()} registered successfully")
         else:
             raise Exception(ret.text)

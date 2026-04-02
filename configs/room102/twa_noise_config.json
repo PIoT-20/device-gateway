@@ -1,0 +1,14 @@
+{
+  "device_type": "TWA-noise",
+  "location": "Room 102",
+  "description": "Noise Monitoring Device in Room 102",
+  "sensors": [
+    { "type": "noise", "model": "Sound Level Meter XYZ", "unit": "dB" }
+  ],
+  "connection_info": {
+    "protocol": "EMULATOR",
+    "emulator_type": "LIVE",
+    "frequency_seconds": 30
+  },
+  "user_id": "69cea632017ea033e31f2fad"
+}

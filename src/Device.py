@@ -37,13 +37,16 @@ class Device:
         print(f"Device initialized. Cfg file: {self._cfg_pth}\n")
         
     def validate_config(self, cfg):
+        if not cfg.get("device_type"):
+            raise ValueError("Device info must contain a device_type")
+
         if not cfg.get("user_id"):
             raise ValueError("Device info must contain a user_id")
         
-        if not cfg.get("address"):
-            raise ValueError("Device info must contain an address")
+        if not cfg.get("location"):
+            raise ValueError("Device info must contain an location")
 
-        if not cfg.get("connection", {}).get("protocol"):
+        if not cfg.get("connection_info", {}).get("protocol"):
             raise ValueError("Connection info must contain a protocol")
         
         return cfg
@@ -80,7 +83,7 @@ class Device:
         return self._cfg_pth
 
     def get_connection_info(self):
-        return self._cfg.get("connection", {})
+        return self._cfg.get("connection_info", {})
     
     def get_id(self):
         return self._cfg.get("device_id", None)

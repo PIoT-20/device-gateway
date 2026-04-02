@@ -21,7 +21,10 @@ if __name__ == "__main__":
         raise ValueError("BROKER_PORT environment variable not set")
     broker_port = int(broker_port)
 
-    configs_dir = path.join(os.getcwd(), "configs")
+    configs_dir = os.getenv("CONFIGS_DIR")
+    if not configs_dir:
+        configs_dir = path.join(os.getcwd(), "configs")
+
     if not path.exists(configs_dir):
         raise ValueError(f"Configs directory not found at path: {configs_dir}")
 
