@@ -1,29 +1,20 @@
 {
-    "device_type": "NVIR-ventilation",
-    "address": "Room 101",
-    "description": "NVIR Ventilation Device in Room 101",
-    "sensors": [
-        {
-            "name": "Temperature Sensor",
-            "model": "TemperatureSensor ABC",
-            "unit": "°C"
-        },
-        {
-            "name": "Pressure Sensor",
-            "model": "PressureSensor ABC",
-            "unit": "hPa"
-        },
-        {
-            "name": "CO2 Sensor",
-            "model": "CO2Sensor ABC",
-            "unit": "ppm"
-        }
-    ],
-
-    "connection": {
-        "protocol": "EMULATOR",
-        "frequency_seconds": 30
+  "device_type": "NVIR-ventilation",
+  "address": "Room 101",
+  "description": "NVIR Ventilation Device in Room 101",
+  "sensors": [
+    {
+      "name": "Temperature Sensor",
+      "model": "TemperatureSensor ABC",
+      "unit": "\u00b0C"
     },
-
-    "user_id": "10348506945867289108"
+    { "name": "Pressure Sensor", "model": "PressureSensor ABC", "unit": "hPa" },
+    { "name": "CO2 Sensor", "model": "CO2Sensor ABC", "unit": "ppm" }
+  ],
+  "connection": {
+    "protocol": "EMULATOR",
+    "emulator_type": "LIVE",
+    "frequency_seconds": 15
+  },
+  "user_id": "10348506945867289108"
 }

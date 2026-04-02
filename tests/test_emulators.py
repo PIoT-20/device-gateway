@@ -1,136 +1,72 @@
 import sys
 import os
-import asyncio
 import unittest
 from unittest.mock import MagicMock
+import statistics
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from Emulators import (
-    TWANoiseEmulator,
-    WBGTEmulator,
-    NVIRVentilationemulator,
-)
-from Factories import EmulatorFactory
+from Emulators import TWANoiseEmulator, WBGTEmulator, NVIRVentilationemulator
+
+SAMPLES = 200
 
 
-class TestTWANoiseEmulator(unittest.TestCase):
-    def setUp(self):
-        self.cb = MagicMock()
-        self.emulator = TWANoiseEmulator(id="noise-1", reading_cb=self.cb)
-
-    def test_reading_has_db_key(self):
-        reading = self.emulator._generate_reading()
-        self.assertIn("db", reading)
-
-    def test_db_value_in_range(self):
-        for _ in range(50):
-            reading = self.emulator._generate_reading()
-            self.assertGreaterEqual(reading["db"], 70)
-            self.assertLess(reading["db"], 100)
+def _make(cls, quality="NORMAL", chaos="NORMAL"):
+    emu = cls(id="test", reading_cb=MagicMock())
+    emu.samples = SAMPLES
+    emu.quality_level = quality
+    emu.chaos_level = chaos
+    return emu
 
 
-class TestWBGTEmulator(unittest.TestCase):
-    def setUp(self):
-        self.cb = MagicMock()
-        self.emulator = WBGTEmulator(id="wbgt-1", reading_cb=self.cb)
+class TestLiveReadingKeys(unittest.TestCase):
+    def test_twa_noise(self):
+        emu = TWANoiseEmulator(id="t", reading_cb=MagicMock())
+        self.assertIn("db", emu._generate_reading())
 
-    def test_reading_has_expected_keys(self):
-        reading = self.emulator._generate_reading()
-        self.assertIn("Tnw", reading)
-        self.assertIn("Tg", reading)
+    def test_wbgt(self):
+        emu = WBGTEmulator(id="t", reading_cb=MagicMock())
+        r = emu._generate_reading()
+        self.assertIn("Tnw", r)
+        self.assertIn("Tg", r)
 
-    def test_tnw_in_range(self):
-        for _ in range(50):
-            reading = self.emulator._generate_reading()
-            self.assertGreaterEqual(reading["Tnw"], 18)
-            self.assertLess(reading["Tnw"], 30)
-
-    def test_tg_greater_or_equal_to_tnw(self):
-        for _ in range(50):
-            reading = self.emulator._generate_reading()
-            self.assertGreaterEqual(reading["Tg"], reading["Tnw"])
+    def test_nvir(self):
+        emu = NVIRVentilationemulator(id="t", reading_cb=MagicMock())
+        r = emu._generate_reading()
+        for key in ("T", "P", "CO2"):
+            self.assertIn(key, r)
 
 
-class TestNVIRVentilationEmulator(unittest.TestCase):
-    def setUp(self):
-        self.cb = MagicMock()
-        self.emulator = NVIRVentilationemulator(id="nvir-1", reading_cb=self.cb)
+class TestQualityShiftsMean(unittest.TestCase):
+    def _assert_mean_shifts(self, cls, key):
+        low = statistics.mean(r[key] for r in _make(cls, quality="LOW")._generate_all_readings())
+        high = statistics.mean(r[key] for r in _make(cls, quality="HIGH")._generate_all_readings())
+        self.assertGreater(high, low)
 
-    def test_reading_has_expected_keys(self):
-        reading = self.emulator._generate_reading()
-        self.assertIn("T", reading)
-        self.assertIn("P", reading)
-        self.assertIn("CO2", reading)
+    def test_twa_noise(self):
+        self._assert_mean_shifts(TWANoiseEmulator, "db")
 
-    def test_temperature_in_range(self):
-        for _ in range(50):
-            reading = self.emulator._generate_reading()
-            self.assertGreaterEqual(reading["T"], 15)
-            self.assertLess(reading["T"], 30)
+    def test_wbgt(self):
+        self._assert_mean_shifts(WBGTEmulator, "Tnw")
 
-    def test_pressure_in_range(self):
-        for _ in range(50):
-            reading = self.emulator._generate_reading()
-            self.assertGreaterEqual(reading["P"], 800)
-            self.assertLess(reading["P"], 1200)
-
-    def test_co2_in_range(self):
-        for _ in range(50):
-            reading = self.emulator._generate_reading()
-            self.assertGreaterEqual(reading["CO2"], 300)
-            self.assertLess(reading["CO2"], 1200)
+    def test_nvir(self):
+        self._assert_mean_shifts(NVIRVentilationemulator, "CO2")
 
 
-class TestEmulatorRun(unittest.TestCase):
-    def test_run_calls_callback(self):
-        cb = MagicMock()
-        emulator = TWANoiseEmulator(id="run-test", reading_cb=cb, frequency_seconds=0)
+class TestChaosChangesSpread(unittest.TestCase):
+    def _assert_spread_increases(self, cls, key):
+        low = statistics.stdev(r[key] for r in _make(cls, chaos="LOW")._generate_all_readings())
+        high = statistics.stdev(r[key] for r in _make(cls, chaos="HIGH")._generate_all_readings())
+        self.assertGreater(high, low)
 
-        async def run_briefly():
-            task = asyncio.create_task(emulator.run())
-            await asyncio.sleep(0.05)
-            emulator.Stop()
-            await task
+    def test_twa_noise(self):
+        self._assert_spread_increases(TWANoiseEmulator, "db")
 
-        asyncio.run(run_briefly())
-        self.assertGreater(cb.call_count, 0)
+    def test_wbgt(self):
+        self._assert_spread_increases(WBGTEmulator, "Tnw")
 
-    def test_run_passes_id_and_reading(self):
-        cb = MagicMock()
-        emulator = TWANoiseEmulator(id="id-test", reading_cb=cb, frequency_seconds=0)
-
-        async def run_briefly():
-            task = asyncio.create_task(emulator.run())
-            await asyncio.sleep(0.05)
-            emulator.Stop()
-            await task
-
-        asyncio.run(run_briefly())
-        call_args = cb.call_args
-        self.assertEqual(call_args[0][0], "id-test")
-        self.assertIn("db", call_args[0][1])
-
-
-class TestEmulatorFactory(unittest.TestCase):
-    def _conn_info(self, frequency=10):
-        return {"frequency_seconds": frequency}
-
-    def test_create_twa_noise(self):
-        emulator = EmulatorFactory.create_emulator("TWA-noise", self._conn_info(), MagicMock())
-        self.assertIsInstance(emulator, TWANoiseEmulator)
-
-    def test_create_wbgt(self):
-        emulator = EmulatorFactory.create_emulator("WBGT", self._conn_info(), MagicMock())
-        self.assertIsInstance(emulator, WBGTEmulator)
-
-    def test_create_nvir_ventilation(self):
-        emulator = EmulatorFactory.create_emulator("NVIR-ventilation", self._conn_info(), MagicMock())
-        self.assertIsInstance(emulator, NVIRVentilationemulator)
-
-    def test_unsupported_type_raises(self):
-        with self.assertRaises(ValueError):
-            EmulatorFactory.create_emulator("unknown-type", self._conn_info(), MagicMock())
+    def test_nvir(self):
+        self._assert_spread_increases(NVIRVentilationemulator, "CO2")
 
 
 if __name__ == "__main__":

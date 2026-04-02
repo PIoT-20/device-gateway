@@ -1,5 +1,6 @@
 
 import asyncio
+from datetime import datetime
 import threading
 
 from bleak import BleakScanner
@@ -12,7 +13,11 @@ class Connection:
         self._stop_event = threading.Event()
         self._thread = None
 
-    def recv_reading(self, reading):
+    def recv_reading(self, ts, data):
+        reading = {
+            "timestamp": ts,
+            "data": data
+        }
         self.reading_cb(self.id, reading)
 
     def Start(self):
@@ -43,7 +48,8 @@ class BLEAdvertisingConnection(Connection):
 
     def detection_cb(self, device, advertisement_data):
         if device.address == self.target_mac:
-            self.recv_reading(advertisement_data)
+            ts = datetime.now().isoformat()
+            self.recv_reading(ts, advertisement_data)
 
     async def run(self):
         while not self.is_stopped():

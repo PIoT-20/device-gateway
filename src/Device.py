@@ -9,26 +9,36 @@ class ConnectionStatus(Enum):
     CONNECTION_ON = 2
 
 class Device:
-    def __init__(self, config=None, config_path=None):
+    def __init__(self, config_path, config=None):
+        if not config_path:
+            raise ValueError("Config path must be provided")
+
         self._cfg_pth = config_path
 
         try: 
             if config:
-                self._cfg = self.validate_config(config)
+                self.set_config(config)
             elif self._cfg_pth:
                 with open(self._cfg_pth, 'r') as f:
                     cfg = json.load(f)
-                self._cfg = self.validate_config(cfg)
-            else:
-                raise ValueError("Either config or config_path must be provided")
+                self.set_config(cfg)
+
         except ValueError as e:
             raise ValueError(f"Invalid initial configuration: {e}")
         
+        except FileNotFoundError as e:
+            raise ValueError(f"Configuration file not found: {e}")
+        
+        except Exception as e:
+            raise Exception(f"Error loading initial configuration: {e}")
+        
         self.connection_status = ConnectionStatus.CONNECTION_OFF
+
+        print(f"Device initialized. Cfg file: {self._cfg_pth}\n")
         
     def validate_config(self, cfg):
-        if not cfg.get("client_id"):
-            raise ValueError("Device info must contain a client_id")
+        if not cfg.get("user_id"):
+            raise ValueError("Device info must contain a user_id")
         
         if not cfg.get("address"):
             raise ValueError("Device info must contain an address")
@@ -60,9 +70,14 @@ class Device:
                     json.dump(self._cfg, f)
         except ValueError as e:
             raise ValueError(f"Invalid configuration received: {e}")
+        except Exception as e:
+            raise Exception(f"Error saving configuration: {e}")
 
     def get_config(self):
         return self._cfg
+    
+    def get_cfg_file(self):
+        return self._cfg_pth
 
     def get_connection_info(self):
         return self._cfg.get("connection", {})

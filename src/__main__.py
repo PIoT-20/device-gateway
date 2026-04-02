@@ -4,9 +4,8 @@ from os import path
 from DeviceGateway import DeviceGateway
 from time import sleep
 from random import randrange as rand
-from Emulators import TWANoiseEmulator, WGBTEmulator, NVIRVentilationemulator
 from CloudServices import CloudServices
-from DeviceConfig import DeviceConfig
+from Device import Device
 
 if __name__ == "__main__":
     catalog_address = os.getenv("CATALOG_ADDRESS")
@@ -26,7 +25,15 @@ if __name__ == "__main__":
     if not path.exists(configs_dir):
         raise ValueError(f"Configs directory not found at path: {configs_dir}")
 
-    devices = [DeviceConfig(path.join(configs_dir, f)) for f in os.listdir(configs_dir) if f.endswith(".json")]
+    devices = []
+    for f in os.listdir(configs_dir):
+        if f.endswith(".json"):
+            try:
+                device = Device(config_path=path.join(configs_dir, f))
+                devices.append(device)
+            except Exception as e:
+                print(f"Error loading device from config {f}: {e}")
+
     cloud_service = CloudServices(catalog_address, broker_host, broker_port)
     gateway = DeviceGateway(cloud_service, devices)
 

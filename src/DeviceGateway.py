@@ -20,13 +20,20 @@ class DeviceGateway:
         self.cloud_service.send_reading(device_id, reading)
 
     def Start(self):
+        self.cloud_service.Start()
+
+        failed_devices = []
         for device in self.devices:
             if not device.get_id():
                 try:
                     self.cloud_service.register_device(device)
                 except Exception as e:
-                    print(f"Error registering device {device.get_id()}: {e}")
-                    self.devices.remove(device)
+                    print(f"Error registering device {device.get_cfg_file()}: {e}")
+                    failed_devices.append(device)
+        
+        # Remove failed devices
+        for device in failed_devices:
+            self.devices.remove(device)
 
         for device in self.devices:
             try:

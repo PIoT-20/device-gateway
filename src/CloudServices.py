@@ -20,18 +20,20 @@ class CloudServices:
     
     def register_device(self, device: Device):
         data = device.get_config()
-        ret = req.post(f"http://{self.catalog}/device", json=data)
-        if ret.status_code == 200:
+        ret = req.post(f"{self.catalog}/device", json=data)
+        if ret.status_code == 201:
             device.set_config(ret.json())
+            print(f"Device {device.get_id()} registered successfully")
         else:
-            raise Exception(f"Failed to register device: {ret.text}")
-
+            raise Exception(ret.text)
+        
     def Start(self):
         self.mqtt_client.start()
 
     def send_reading(self, id, reading):
         topic = f"devices/{id}/readings"
         self.mqtt_client.myPublish(topic, reading)
+        print(f"Sent reading for device {id} to topic {topic}: {reading}")
 
     def Stop(self):
         self.mqtt_client.stop()
