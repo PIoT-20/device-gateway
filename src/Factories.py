@@ -19,6 +19,8 @@ class EmulatorFactory:
     def create_emulator(device_id, device_type, connection_info, reading_cb):
         """Create emulator for given device type with LIVE or DUMP mode parameters."""
         emulator_type = connection_info.get("emulator_type", None)
+
+        print(connection_info)
         
         # Extract parameters
         freq = connection_info.get("frequency_seconds")
@@ -29,13 +31,9 @@ class EmulatorFactory:
         chaos_level = connection_info.get("chaos_level", "NORMAL")
         
         # Validate based on mode
-        if emulator_type == "LIVE" and not freq:
-            raise ValueError("LIVE emulator requires frequency_seconds")
-        elif emulator_type == "DUMP" and not (start_time and end_time and samples):
-            raise ValueError("DUMP emulator requires start_time, end_time, and samples")
-        elif not emulator_type:
-            raise ValueError("emulator_type must be specified")
-        
+        if not (emulator_type == "LIVE" or emulator_type == "DUMP"):
+            raise ValueError("Invalid emulator_type. Must be 'LIVE' or 'DUMP'.")
+
         # Map device type to emulator class
         emulator_classes = {
             "TWA-noise": TWANoiseEmulator,

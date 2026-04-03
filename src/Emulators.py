@@ -30,18 +30,22 @@ class SensorEmulator(Connection):
         """
         super().__init__(id=id, reading_cb=reading_cb)
         
-        # LIVE mode parameters
-        self.frequency_seconds = frequency_seconds or 30
-        
-        # DUMP mode parameters
+        self.frequency_seconds = frequency_seconds or 30        
         self.start_time = start_time
         self.end_time = end_time
         self.samples = samples
         self.quality_level = quality_level
         self.chaos_level = chaos_level
+
+        # validation
+        if start_time and end_time and (samples or frequency_seconds):
+            self.is_dump_mode = True
+        elif frequency_seconds and not (start_time or end_time or samples):
+            self.is_dump_mode = False
+        else:
+            raise ValueError("Invalid configuration: For LIVE mode, provide frequency_seconds. For DUMP mode, provide start_time, end_time, and samples/frequency.")
         
         # Determine active mode
-        self.is_dump_mode = start_time is not None and end_time is not None
 
     async def run(self):
         if self.is_dump_mode:
@@ -53,7 +57,6 @@ class SensorEmulator(Connection):
         """Generate readings in real-time."""
         while not self.is_stopped():
             reading = self._generate_reading()
-            print("Sending reading: ", reading)
             ts = datetime.datetime.now().isoformat()
             self.recv_reading(ts, reading)
             await asyncio.sleep(self.frequency_seconds)
@@ -64,19 +67,21 @@ class SensorEmulator(Connection):
         self.end_time = datetime.datetime.fromisoformat(self.end_time)
 
         total_seconds = (self.end_time - self.start_time).total_seconds()
-        interval = total_seconds / self.samples
+        if self.frequency_seconds:
+            self.samples = int(total_seconds / self.frequency_seconds)
+        else:
+            self.frequency_seconds = total_seconds / self.samples
+        
         current_time = self.start_time
-
-        readings = self._generate_all_readings()
-
-        for reading in readings:
+        for i in range(self.samples):
             if self.is_stopped():
                 break
 
             ts = current_time.isoformat()
+            reading = self._generate_reading()
             self.recv_reading(ts, reading)
 
-            current_time += datetime.timedelta(seconds=interval)
+            current_time += datetime.timedelta(seconds=self.frequency_seconds)
             await asyncio.sleep(0.1)
 
     def _gauss(self, low, high):
@@ -88,11 +93,7 @@ class SensorEmulator(Connection):
 
     # Methods to override in subclasses
     def _generate_reading(self):
-        """Generate a single live reading. Override in subclass."""
-        raise NotImplementedError
-
-    def _generate_all_readings(self):
-        """Generate all dump readings. Override in subclass."""
+        """Generate a single reading. Override in subclass."""
         raise NotImplementedError
 
 
@@ -102,13 +103,6 @@ class TWANoiseEmulator(SensorEmulator):
     
     def _generate_reading(self):
         return {"db": self._gauss(self.LOWER_DB, self.UPPER_DB)}
-
-    def _generate_all_readings(self):
-        return [
-            {"db": self._gauss(self.LOWER_DB, self.UPPER_DB)} 
-            for _ in range(self.samples)
-        ]
-
 
 class WBGTEmulator(SensorEmulator):
     TNW_MIN = 18
@@ -122,15 +116,6 @@ class WBGTEmulator(SensorEmulator):
             "Tnw": temp,
             "Tg": self._gauss(self.TG_MIN, self.TG_MAX),
         }
-
-    def _generate_all_readings(self):
-        return [
-            {
-                "Tnw": self._gauss(self.TNW_MIN, self.TNW_MAX),
-                "Tg": self._gauss(self.TG_MIN, self.TG_MAX)
-            } 
-            for _ in range(self.samples)
-        ]
 
 
 class NVIRVentilationemulator(SensorEmulator):
@@ -147,13 +132,3 @@ class NVIRVentilationemulator(SensorEmulator):
             "P": self._gauss(self.P_MIN, self.P_MAX),
             "CO2": self._gauss(self.CO2_MIN, self.CO2_MAX),
         }
-
-    def _generate_all_readings(self):
-        return [
-            {
-                "T": self._gauss(self.T_MIN, self.T_MAX),
-                "P": self._gauss(self.P_MIN, self.P_MAX),
-                "CO2": self._gauss(self.CO2_MIN, self.CO2_MAX),
-            } 
-            for _ in range(self.samples)
-        ]
