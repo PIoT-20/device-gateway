@@ -1,5 +1,5 @@
 {
-  "device_type": "NVIR-ventilation",
+  "device_type": "NVIRVentilation",
   "location": "Room 102",
   "description": "NVIR Ventilation Device in Room 102",
   "sensors": [

@@ -1,0 +1,25 @@
+{
+  "device_type": "WBGT",
+  "location": "Room 101",
+  "description": "WBGT Monitoring Device in Room 101",
+  "sensors": [
+    {
+      "type": "Natural Wet Bulb Termometer",
+      "model": "WetBulbSensor ABC",
+      "unit": "°C"
+    },
+    {
+      "type": "Black Globe Termometer",
+      "model": "BlackGlobeSensor ABC",
+      "unit": "°C"
+    }
+  ],
+  "connection_info": {
+    "protocol": "EMULATOR",
+    "emulator_type": "DUMP",
+    "start_time": "2026-01-02T00:00:00Z",
+    "end_time": "2026-01-04T00:00:00Z",
+    "frequency_seconds": 300
+  },
+  "user_id": "69cea632017ea033e31f2fad"
+}

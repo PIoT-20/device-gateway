@@ -1,5 +1,5 @@
 {
-  "device_type": "TWA-noise",
+  "device_type": "TWANoise",
   "location": "Room 102",
   "description": "Noise Monitoring Device in Room 102",
   "sensors": [

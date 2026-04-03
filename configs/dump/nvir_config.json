@@ -1,5 +1,5 @@
 {
-  "device_type": "NVIR-ventilation",
+  "device_type": "NVIRVentilation",
   "location": "Room 101",
   "description": "NVIR Ventilation Device in Room 101",
   "sensors": [
@@ -13,8 +13,10 @@
   ],
   "connection_info": {
     "protocol": "EMULATOR",
-    "emulator_type": "LIVE",
-    "frequency_seconds": 15
+    "emulator_type": "DUMP",
+    "start_time": "2026-01-02T00:00:00Z",
+    "end_time": "2026-01-04T00:00:00Z",
+    "frequency_seconds": 600
   },
   "user_id": "69cea632017ea033e31f2fad"
 }
