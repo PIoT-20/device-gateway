@@ -8,13 +8,21 @@
       "model": "TemperatureSensor ABC",
       "unit": "°C"
     },
-    { "type": "pressure", "model": "PressureSensor ABC", "unit": "hPa" },
-    { "type": "CO2", "model": "CO2Sensor ABC", "unit": "ppm" }
+    {
+      "type": "pressure",
+      "model": "PressureSensor ABC",
+      "unit": "hPa"
+    },
+    {
+      "type": "CO2",
+      "model": "CO2Sensor ABC",
+      "unit": "ppm"
+    }
   ],
   "connection_info": {
     "protocol": "EMULATOR",
     "emulator_type": "LIVE",
     "frequency_seconds": 15
   },
-  "user_id": "69cea632017ea033e31f2fad"
+  "user_id": "6a0a517bb52d15e2a7e0ea0e"
 }
