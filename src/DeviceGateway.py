@@ -11,11 +11,11 @@ from CloudServices import CloudServices
 class DeviceGateway:
     exposed = True
 
-    def __init__(self, cloud_service: CloudServices, devices: list[Device]) -> None:
+    def __init__(self, cloud_service: CloudServices, devices_ids: list[str]) -> None:
         self.cloud_service = cloud_service
-        self.devices = devices
-            
-    
+        self.devices_ids = devices_ids
+        self.devices = []
+
     def handle_reading(self, device_id, reading):
         self.cloud_service.send_reading(device_id, reading)
 
@@ -23,17 +23,18 @@ class DeviceGateway:
         self.cloud_service.Start()
 
         failed_devices = []
-        for device in self.devices:
-            if not device.get_id():
-                try:
-                    self.cloud_service.register_device(device)
-                except Exception as e:
-                    print(f"Error registering device {device.get_cfg_file()}: {e}")
-                    failed_devices.append(device)
-        
+        for device_id in self.devices_ids:
+            try:
+                config = self.cloud_service.get_device_config(device_id)
+                device = Device(config)
+                self.devices.append(device)
+            except Exception as e:
+                print(f"Error getting device config for {device_id}: {e}")
+                failed_devices.append(device_id)
+
         # Remove failed devices
-        for device in failed_devices:
-            self.devices.remove(device)
+        for device_id in failed_devices:
+            self.devices_ids.remove(device_id)
 
         for device in self.devices:
             try:

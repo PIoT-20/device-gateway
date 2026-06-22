@@ -1,3 +1,4 @@
+import json
 import os
 from os import path
 
@@ -21,24 +22,16 @@ if __name__ == "__main__":
         raise ValueError("BROKER_PORT environment variable not set")
     broker_port = int(broker_port)
 
-    configs_dir = os.getenv("CONFIGS_DIR")
-    if not configs_dir:
-        configs_dir = path.join(os.getcwd(), "configs")
+    config_path = path.join(os.getcwd(), "config.json")
+    if not path.exists(config_path):
+        raise ValueError(f"Config file not found at path: {config_path}")
 
-    if not path.exists(configs_dir):
-        raise ValueError(f"Configs directory not found at path: {configs_dir}")
-
-    devices = []
-    for f in os.listdir(configs_dir):
-        if f.endswith(".json"):
-            try:
-                device = Device(config_path=path.join(configs_dir, f))
-                devices.append(device)
-            except Exception as e:
-                print(f"Error loading device from config {f}: {e}")
+    devices_ids = json.load(open(config_path, "r")).get("devices", [])
+    if not devices_ids:
+        raise ValueError("No devices found in config file")
 
     cloud_service = CloudServices(catalog_address, broker_host, broker_port)
-    gateway = DeviceGateway(cloud_service, devices)
+    gateway = DeviceGateway(cloud_service, devices_ids)
 
     gateway.Start()
 

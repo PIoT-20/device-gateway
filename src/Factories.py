@@ -6,8 +6,8 @@ class ConnectionFactory:
     @staticmethod
     def create_connection(device_id, connection_info, device_type, reading_cb):
         protocol = connection_info.get("protocol", None)
-        if protocol == "BLE_ADVERTISING":
-            return BLEAdvertisingConnection(device_id, reading_cb, connection_info.get("MAC", None))
+        if protocol == "BLE":
+            return BLEAdvertisingConnection(device_id, reading_cb, connection_info.get("UUID", None), connection_info.get("MAJOR", None), connection_info.get("MINOR", None))
         if protocol == "EMULATOR":
             return EmulatorFactory.create_emulator(device_id, device_type, connection_info, reading_cb)
         else:
@@ -36,9 +36,9 @@ class EmulatorFactory:
 
         # Map device type to emulator class
         emulator_classes = {
-            "TWA-noise": TWANoiseEmulator,
+            "TWANoise": TWANoiseEmulator,
             "WBGT": WBGTEmulator,
-            "NVIR-ventilation": NVIRVentilationemulator,
+            "NVIRVentilation": NVIRVentilationemulator,
         }
         
         emulator_class = emulator_classes.get(device_type)

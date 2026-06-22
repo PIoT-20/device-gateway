@@ -42,14 +42,17 @@ class Connection:
         pass
 
 class BLEAdvertisingConnection(Connection):
-    def __init__(self, id, reading_cb, target_mac):
+    def __init__(self, id, reading_cb, uuid, major, minor):
         super().__init__(id, reading_cb)
-        self.target_mac = target_mac
+        self.uuid = uuid
+        self.major = major
+        self.minor = minor
 
     def detection_cb(self, device, advertisement_data):
-        if device.address == self.target_mac:
-            ts = datetime.now().isoformat()
-            self.recv_reading(ts, advertisement_data)
+        # TODO: filter by uuid, major and minor
+        return
+        ts = datetime.now().isoformat()
+        self.recv_reading(ts, advertisement_data)
 
     async def run(self):
         while not self.is_stopped():

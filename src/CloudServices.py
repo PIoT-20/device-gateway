@@ -37,6 +37,13 @@ class CloudServices:
         else:
             raise Exception(ret.text)
         
+    def get_device_config(self, device_id):
+        ret = req.get(f"{self.catalog}/device", params={"device_id": device_id})
+        if ret.status_code == 200:
+            return ret.json()
+        else:
+            raise Exception(f"Failed to get device config: {ret.text}")
+        
     def Start(self):
         self.mqtt_client.start()
 

@@ -14,6 +14,6 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy application source
 COPY src/ /app/src/
-COPY configs/ /app/configs/
+COPY config.json /app/config.json
 
 CMD ["python", "-u", "src/__main__.py"]
