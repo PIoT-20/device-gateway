@@ -1,22 +1,22 @@
 import json
 import os
 from os import path
-
-from DeviceGateway import DeviceGateway
-from time import sleep
 from random import randrange as rand
+from time import sleep
+
 from CloudServices import CloudServices
 from Device import Device
+from DeviceGateway import DeviceGateway
 
 if __name__ == "__main__":
     catalog_address = os.getenv("CATALOG_ADDRESS")
     if not catalog_address:
         raise ValueError("CATALOG_ADDRESS environment variable not set")
-    
+
     broker_host = os.getenv("BROKER_HOST")
     if not broker_host:
         raise ValueError("BROKER_HOST environment variable not set")
-        
+
     broker_port = os.getenv("BROKER_PORT")
     if not broker_port:
         raise ValueError("BROKER_PORT environment variable not set")
