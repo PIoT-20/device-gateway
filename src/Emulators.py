@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import os
 import random
 from random import randrange as rand
 from Connections import Connection
@@ -17,6 +18,9 @@ QUALITY_MEAN_FACTOR = {"HIGH": 0.25, "NORMAL": 0.50, "LOW": 0.75}
 #   HIGH   = wide spread, more outliers
 CHAOS_STD_FACTOR = {"LOW": 0.05, "NORMAL": 0.12, "HIGH": 0.25}
 
+
+seed_value = int.from_bytes(os.urandom(64), byteorder="big")
+random.seed(seed_value)
 
 class SensorEmulator(Connection):
     """Base class for sensor emulators supporting LIVE and DUMP modes."""
